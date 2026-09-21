@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "BitLock — Coffre-fort local",
-  "short_name": "BitLock",
-  "description": "Remplissez et enregistrez vos identifiants depuis votre coffre-fort BitLock local.",
-  "version": "2.0.0",
+  "name": "QVault — Coffre-fort local",
+  "short_name": "QVault",
+  "description": "Remplissez et enregistrez vos identifiants depuis votre coffre-fort QVault.",
+  "version": "3.0.0",
   "minimum_chrome_version": "116",
   "icons": {
     "16": "icons/icon-16.svg",
@@ -12,7 +12,7 @@
   },
   "action": {
     "default_popup": "src/popup/popup.html",
-    "default_title": "Ouvrir BitLock",
+    "default_title": "Ouvrir QVault",
     "default_icon": {
       "16": "icons/icon-16.svg",
       "48": "icons/icon-48.svg",
@@ -24,6 +24,7 @@
     "storage"
   ],
   "host_permissions": [
+    "https://qvault.hqmerchant.xyz/*",
     "http://localhost:3000/*"
   ],
   "content_scripts": [

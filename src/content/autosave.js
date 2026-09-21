@@ -1,15 +1,15 @@
 /**
- * BitLock credential bridge.
+ * QVault credential bridge.
  *
  * The script captures credentials only after an explicit submit-like action.
  * It also receives one-time fill commands from the extension popup.
  */
 
 (() => {
-  if (window.top !== window || window.__bitlockCredentialBridge) return
-  window.__bitlockCredentialBridge = true
+  if (window.top !== window || window.__qvaultCredentialBridge) return
+  window.__qvaultCredentialBridge = true
 
-  const ignoredHostKey = `bitlock-ignore:${window.location.hostname}`
+  const ignoredHostKey = `qvault-ignore:${window.location.hostname}`
   let lastCaptureFingerprint = ''
   let promptHost = null
   let promptTimer = null
@@ -133,12 +133,12 @@
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (!message || typeof message.type !== 'string') return undefined
 
-    if (message.type === 'BITLOCK_PAGE_CONTEXT') {
+    if (message.type === 'QVAULT_PAGE_CONTEXT') {
       sendResponse(pageContext())
       return undefined
     }
 
-    if (message.type === 'BITLOCK_FILL') {
+    if (message.type === 'QVAULT_FILL') {
       const credential = message.credential || {}
       const passwordInput = findPasswordField()
       if (!passwordInput) {
@@ -173,7 +173,7 @@
     closePrompt()
 
     const host = document.createElement('div')
-    host.id = 'bitlock-save-prompt-host'
+    host.id = 'qvault-save-prompt-host'
     host.style.cssText = 'all:initial;position:fixed;inset:16px 16px auto auto;z-index:2147483647;'
     const shadow = host.attachShadow({ mode: 'closed' })
 
@@ -185,8 +185,8 @@
         --ink: oklch(96% 0.01 145);
         --muted: oklch(72% 0.025 250);
         --rule: oklch(31% 0.03 250);
-        --accent: oklch(80% 0.19 145);
-        --focus: oklch(88% 0.16 145);
+        --accent: oklch(70% 0.16 260);
+        --focus: oklch(80% 0.14 260);
         --shadow: oklch(5% 0.01 250 / 0.48);
         color-scheme: dark;
       }
@@ -248,7 +248,7 @@
     const prompt = document.createElement('section')
     prompt.className = 'prompt'
     prompt.setAttribute('role', 'dialog')
-    prompt.setAttribute('aria-label', 'Enregistrer l’identifiant dans BitLock')
+    prompt.setAttribute('aria-label', 'Enregistrer l’identifiant dans QVault')
 
     const head = document.createElement('div')
     head.className = 'head'
@@ -256,9 +256,9 @@
     brand.className = 'brand'
     const mark = document.createElement('span')
     mark.className = 'mark'
-    mark.textContent = 'B'
+    mark.textContent = 'Q'
     const title = document.createElement('span')
-    title.textContent = 'BitLock'
+    title.textContent = 'QVault'
     brand.append(mark, title)
 
     const close = document.createElement('button')
@@ -283,11 +283,11 @@
     const save = document.createElement('button')
     save.className = 'save'
     save.type = 'button'
-    save.textContent = 'Continuer dans BitLock'
+    save.textContent = 'Continuer dans QVault'
     save.addEventListener('click', () => {
       save.disabled = true
       chrome.runtime.sendMessage({
-        type: 'BITLOCK_CAPTURE_CREDENTIAL',
+        type: 'QVAULT_CAPTURE_CREDENTIAL',
         credential,
       }, (response) => {
         if (response?.ok) closePrompt()

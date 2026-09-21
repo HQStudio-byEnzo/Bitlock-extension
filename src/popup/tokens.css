@@ -1,5 +1,6 @@
-/* BitLock extension design tokens */
+/* QVault extension design tokens */
 :root {
+  color-scheme: dark;
   --color-bg: oklch(12% 0.018 250);
   --color-panel: oklch(16% 0.022 250);
   --color-panel-raised: oklch(20% 0.026 250);
@@ -8,10 +9,10 @@
   --color-text: oklch(91% 0.016 250);
   --color-text-muted: oklch(69% 0.028 250);
   --color-text-faint: oklch(55% 0.025 250);
-  --color-accent: oklch(80% 0.19 145);
-  --color-accent-soft: oklch(80% 0.19 145 / 0.12);
-  --color-accent-ink: oklch(14% 0.03 145);
-  --color-focus: oklch(88% 0.16 145);
+  --color-accent: oklch(70% 0.16 260);
+  --color-accent-soft: oklch(70% 0.16 260 / 0.12);
+  --color-accent-ink: oklch(16% 0.02 260);
+  --color-focus: oklch(80% 0.14 260);
   --color-danger: oklch(68% 0.18 28);
   --color-danger-soft: oklch(68% 0.18 28 / 0.12);
   --color-warning: oklch(80% 0.15 84);

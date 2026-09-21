@@ -1,37 +1,38 @@
-# BitLock — Extension Chrome locale
+# QVault — Extension Chrome
 
-L’extension BitLock permet de rechercher, déchiffrer, copier, remplir et
-enregistrer des identifiants depuis l’instance locale de BitLock.
+L’extension QVault permet de rechercher, déchiffrer, copier, remplir et
+enregistrer des identifiants depuis votre coffre-fort QVault.
 
 ## Fonctions
 
-- connexion avec un jeton d’extension révocable ;
+- connexion à QVault (production ou instance locale) avec un jeton d’extension révocable ;
 - déverrouillage avec le mot de passe maître, conservé uniquement en mémoire ;
 - affichage prioritaire des comptes correspondant au site actif ;
 - remplissage du username et du mot de passe ;
 - capture après une action explicite de soumission ;
 - validation avant enregistrement d’un identifiant détecté ;
-- chiffrement AES-256-GCM côté extension ;
+- chiffrement AES-256-GCM (PBKDF2-SHA256, 600 000 itérations) côté extension ;
 - génération de mots de passe forts ;
 - recherche locale dans les éléments déjà déchiffrés.
 
 ## Prérequis
 
-1. Lancer BitLock sur `http://localhost:3000`.
-2. Se connecter à BitLock.
+1. Avoir un compte QVault (par défaut `https://qvault.hqmerchant.xyz`, ou votre
+   instance locale sur `http://localhost:3000`).
+2. Se connecter à QVault.
 3. Ouvrir les paramètres de sécurité et créer un jeton d’extension.
 4. Copier le jeton commençant par `blx_`.
 
 Le jeton n’est affiché qu’au moment de sa création. Il peut être révoqué depuis
-les paramètres BitLock.
+les paramètres QVault.
 
 ## Installation
 
 1. Ouvrir `chrome://extensions/`.
 2. Activer le mode développeur.
 3. Choisir **Charger l’extension non empaquetée**.
-4. Sélectionner le dossier `Kipit-extension`.
-5. Ouvrir le popup BitLock et coller le jeton.
+4. Sélectionner ce dossier (`Bitlock-extension`).
+5. Ouvrir le popup QVault, choisir le serveur, puis coller le jeton.
 
 Après une modification du code, utiliser le bouton **Actualiser** de la carte
 de l’extension dans `chrome://extensions/`.
@@ -51,6 +52,13 @@ Le jeton est stocké dans l’espace privé de l’extension afin de conserver l
 connexion après le redémarrage du navigateur. Verrouiller le coffre efface
 immédiatement les données déchiffrées de la mémoire du popup.
 
+## Compatibilité de chiffrement
+
+L’extension lit le format de payload courant de QVault
+(`v2:600000:<salt>:<ciphertext>`) et, en lecture seule, l’ancien format
+(`<salt>:<ciphertext>`, 100 000 itérations). Les nouveaux identifiants sont
+toujours écrits au format courant.
+
 ## Validation
 
 ```powershell
@@ -58,7 +66,8 @@ bun run test
 ```
 
 Le validateur contrôle la syntaxe JavaScript, le manifeste, les permissions,
-les identifiants DOM, les anciennes URL et les erreurs d’encodage.
+les hôtes autorisés, les identifiants DOM, l’absence d’ancienne marque ou URL,
+le facteur PBKDF2, le marqueur maître gelé et les erreurs d’encodage.
 
 ## Structure
 

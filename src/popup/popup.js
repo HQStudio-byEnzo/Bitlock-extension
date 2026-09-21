@@ -1,12 +1,25 @@
-const API_URL = 'http://localhost:3000'
+const SERVERS = {
+  production: 'https://qvault.hqmerchant.xyz',
+  local: 'http://localhost:3000',
+}
+const DEFAULT_SERVER = SERVERS.production
+// Frozen crypto marker: existing master verifiers were encrypted with this
+// exact string, so it must never change.
 const MASTER_VERIFIER_TEXT = 'bitlock://master-verifier/v1'
+const LEGACY_PBKDF2_ITERATIONS = 100000
+const PBKDF2_ITERATIONS = 600000
+const ENCRYPTED_PAYLOAD_VERSION = 'v2'
 const TOKEN_PATTERN = /^blx_[A-Za-z0-9_-]{40,64}$/
+const TOKEN_STORAGE_KEY = 'qvaultExtensionToken'
+const SERVER_STORAGE_KEY = 'qvaultExtensionServer'
+const LEGACY_TOKEN_STORAGE_KEY = 'bitlockExtensionToken'
 
 const elements = {
   connectView: document.getElementById('connect-view'),
   unlockView: document.getElementById('unlock-view'),
   vaultView: document.getElementById('vault-view'),
   addView: document.getElementById('add-view'),
+  serverSelect: document.getElementById('server-select'),
   connectForm: document.getElementById('connect-form'),
   connectButton: document.getElementById('connect-btn'),
   tokenInput: document.getElementById('token-input'),
@@ -34,10 +47,13 @@ const elements = {
   allList: document.getElementById('all-list'),
   allCount: document.getElementById('all-count'),
   status: document.getElementById('status'),
+  settingsLink: document.getElementById('settings-link'),
+  brandLink: document.getElementById('brand-link'),
 }
 
 const state = {
   token: '',
+  apiUrl: DEFAULT_SERVER,
   rawItems: [],
   items: [],
   masterPassword: '',
@@ -49,6 +65,7 @@ const state = {
 document.addEventListener('DOMContentLoaded', initialize)
 
 elements.connectForm.addEventListener('submit', connectExtension)
+elements.serverSelect.addEventListener('change', () => setServer(elements.serverSelect.value))
 elements.unlockForm.addEventListener('submit', unlockVault)
 elements.addForm.addEventListener('submit', saveCredential)
 elements.lockButton.addEventListener('click', lockVault)
@@ -67,10 +84,19 @@ document.addEventListener('keydown', (event) => {
 
 async function initialize() {
   await readActivePage()
-  const stored = await chrome.storage.local.get(['bitlockExtensionToken'])
-  const token = typeof stored.bitlockExtensionToken === 'string'
-    ? stored.bitlockExtensionToken
-    : ''
+  const stored = await chrome.storage.local.get([
+    TOKEN_STORAGE_KEY,
+    SERVER_STORAGE_KEY,
+    LEGACY_TOKEN_STORAGE_KEY,
+  ])
+  setServer(stored[SERVER_STORAGE_KEY])
+
+  let token = typeof stored[TOKEN_STORAGE_KEY] === 'string' ? stored[TOKEN_STORAGE_KEY] : ''
+  if (!TOKEN_PATTERN.test(token) && typeof stored[LEGACY_TOKEN_STORAGE_KEY] === 'string') {
+    token = stored[LEGACY_TOKEN_STORAGE_KEY]
+    if (TOKEN_PATTERN.test(token)) await chrome.storage.local.set({ [TOKEN_STORAGE_KEY]: token })
+  }
+  await chrome.storage.local.remove([LEGACY_TOKEN_STORAGE_KEY])
 
   if (!TOKEN_PATTERN.test(token)) {
     showView('connect')
@@ -82,11 +108,18 @@ async function initialize() {
     await refreshEncryptedItems()
     showView('unlock')
   } catch (error) {
-    await chrome.storage.local.remove(['bitlockExtensionToken'])
+    await chrome.storage.local.remove([TOKEN_STORAGE_KEY])
     state.token = ''
     showView('connect')
     showStatus(messageFromError(error, 'Le jeton enregistré n’est plus valide.'), 'error')
   }
+}
+
+function setServer(value) {
+  state.apiUrl = value === SERVERS.local ? SERVERS.local : DEFAULT_SERVER
+  elements.serverSelect.value = state.apiUrl
+  elements.brandLink.href = `${state.apiUrl}/`
+  elements.settingsLink.href = `${state.apiUrl}/dashboard/settings`
 }
 
 async function apiRequest(path, options = {}) {
@@ -96,18 +129,18 @@ async function apiRequest(path, options = {}) {
 
   let response
   try {
-    response = await fetch(`${API_URL}${path}`, {
+    response = await fetch(`${state.apiUrl}${path}`, {
       ...options,
       headers,
       cache: 'no-store',
     })
   } catch {
-    throw new Error('BitLock local est inaccessible. Lancez le serveur sur localhost:3000.')
+    throw new Error('QVault est inaccessible. Vérifiez le serveur sélectionné et votre connexion.')
   }
 
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(data.message || `Erreur BitLock (${response.status})`)
+    throw new Error(data.message || `Erreur QVault (${response.status})`)
   }
   return data
 }
@@ -119,15 +152,19 @@ async function connectExtension(event) {
 
   if (!TOKEN_PATTERN.test(token)) {
     setFieldError(elements.tokenInput)
-    showStatus('Ce jeton BitLock est invalide.', 'error')
+    showStatus('Ce jeton QVault est invalide.', 'error')
     return
   }
 
+  setServer(elements.serverSelect.value)
   setLoading(elements.connectButton, true)
   state.token = token
   try {
     await refreshEncryptedItems()
-    await chrome.storage.local.set({ bitlockExtensionToken: token })
+    await chrome.storage.local.set({
+      [TOKEN_STORAGE_KEY]: token,
+      [SERVER_STORAGE_KEY]: state.apiUrl,
+    })
     elements.tokenInput.value = ''
     showView('unlock')
     showStatus('Extension connectée.', 'success')
@@ -208,7 +245,7 @@ async function verifyMasterPassword(unlockState, masterPassword) {
     return
   }
 
-  throw new Error('Configurez d’abord le mot de passe maître dans BitLock.')
+  throw new Error('Configurez d’abord le mot de passe maître dans QVault.')
 }
 
 async function refreshEncryptedItems() {
@@ -229,8 +266,8 @@ async function disconnectExtension() {
   state.masterPassword = ''
   state.rawItems = []
   state.items = []
-  await chrome.storage.local.remove(['bitlockExtensionToken'])
-  await chrome.runtime.sendMessage({ type: 'BITLOCK_CLEAR_PENDING' }).catch(() => {})
+  await chrome.storage.local.remove([TOKEN_STORAGE_KEY, LEGACY_TOKEN_STORAGE_KEY])
+  await chrome.runtime.sendMessage({ type: 'QVAULT_CLEAR_PENDING' }).catch(() => {})
   showView('connect')
   showStatus('Extension déconnectée.', 'success')
 }
@@ -259,7 +296,7 @@ async function readActivePage() {
 
     try {
       state.pageContext = await chrome.tabs.sendMessage(tab.id, {
-        type: 'BITLOCK_PAGE_CONTEXT',
+        type: 'QVAULT_PAGE_CONTEXT',
       })
     } catch {
       const url = new URL(tab.url)
@@ -353,7 +390,7 @@ async function fillCredential(item, button) {
   setLoading(button, true)
   try {
     const response = await chrome.tabs.sendMessage(state.activeTab.id, {
-      type: 'BITLOCK_FILL',
+      type: 'QVAULT_FILL',
       credential: {
         username: item.username,
         password: item.password,
@@ -382,7 +419,7 @@ async function copyPassword(item, button) {
 }
 
 async function consumePendingCredential() {
-  const response = await chrome.runtime.sendMessage({ type: 'BITLOCK_TAKE_PENDING' })
+  const response = await chrome.runtime.sendMessage({ type: 'QVAULT_TAKE_PENDING' })
     .catch(() => null)
   if (response?.credential) openAddView(response.credential)
 }
@@ -437,7 +474,7 @@ async function saveCredential(event) {
   setLoading(elements.saveButton, true)
   try {
     const plaintext = JSON.stringify({
-      schema: 'bitlock.credentials/v1',
+      schema: 'qvault.credentials/v1',
       username,
       password,
     })
@@ -448,7 +485,7 @@ async function saveCredential(event) {
       body: JSON.stringify({
         label,
         url: url.toString(),
-        payload: `${encrypted.salt}:${encrypted.ciphertext}`,
+        payload: serializeEncryptedPayload(encrypted),
         iv: encrypted.iv,
       }),
     })
@@ -519,17 +556,36 @@ async function encryptData(plaintext, masterPassword) {
   }
 }
 
+function serializeEncryptedPayload(value) {
+  return `${ENCRYPTED_PAYLOAD_VERSION}:${PBKDF2_ITERATIONS}:${value.salt}:${value.ciphertext}`
+}
+
+function parseEncryptedPayload(payload) {
+  const parts = payload.split(':')
+  if (parts.length === 2 && parts[0] && parts[1]) {
+    return { salt: parts[0], ciphertext: parts[1], iterations: LEGACY_PBKDF2_ITERATIONS }
+  }
+  if (
+    parts.length === 4
+    && parts[0] === ENCRYPTED_PAYLOAD_VERSION
+    && Number(parts[1]) === PBKDF2_ITERATIONS
+    && parts[2]
+    && parts[3]
+  ) {
+    return { salt: parts[2], ciphertext: parts[3], iterations: PBKDF2_ITERATIONS }
+  }
+  throw new Error('Élément chiffré invalide.')
+}
+
 async function decryptEnvelope(payload, ivBase64, masterPassword) {
   if (typeof payload !== 'string' || typeof ivBase64 !== 'string') {
     throw new Error('Élément chiffré invalide.')
   }
-  const separator = payload.indexOf(':')
-  if (separator <= 0) throw new Error('Élément chiffré invalide.')
-
-  const salt = base64ToBytes(payload.slice(0, separator))
-  const ciphertext = base64ToBytes(payload.slice(separator + 1))
+  const envelope = parseEncryptedPayload(payload)
+  const salt = base64ToBytes(envelope.salt)
+  const ciphertext = base64ToBytes(envelope.ciphertext)
   const iv = base64ToBytes(ivBase64)
-  const key = await deriveKey(masterPassword, salt, ['decrypt'])
+  const key = await deriveKey(masterPassword, salt, ['decrypt'], envelope.iterations)
   const decrypted = await crypto.subtle.decrypt(
     { name: 'AES-GCM', iv },
     key,
@@ -538,7 +594,7 @@ async function decryptEnvelope(payload, ivBase64, masterPassword) {
   return new TextDecoder().decode(decrypted)
 }
 
-async function deriveKey(masterPassword, salt, usages) {
+async function deriveKey(masterPassword, salt, usages, iterations = PBKDF2_ITERATIONS) {
   const material = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(masterPassword),
@@ -550,7 +606,7 @@ async function deriveKey(masterPassword, salt, usages) {
     {
       name: 'PBKDF2',
       salt,
-      iterations: 100000,
+      iterations,
       hash: 'SHA-256',
     },
     material,

@@ -1,4 +1,4 @@
-/* Hallmark · component: extension popup · genre: modern-minimal · theme: BitLock Terminal
+/* Hallmark · component: extension popup · genre: modern-minimal · theme: QVault Terminal
  * states: default · hover · focus · active · disabled · loading · error · success
  * contrast: pass (40–41) · tokens: pass (48) · responsive: pass (34, 49–57)
  * icons: pass (30) · honest: pass (46) · chrome: pass (47) · slop: pass (1–58)
@@ -27,7 +27,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -155,7 +156,8 @@ label {
   font-size: var(--text-xs);
 }
 
-input {
+input,
+select {
   width: 100%;
   min-width: 0;
   min-height: 44px;
@@ -173,20 +175,24 @@ input::placeholder {
   color: var(--color-text-faint);
 }
 
-input:hover:not(:disabled) {
+input:hover:not(:disabled),
+select:hover:not(:disabled) {
   background: var(--color-panel-raised);
 }
 
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   border-color: var(--color-focus);
   outline-color: var(--color-focus);
 }
 
-input:active:not(:disabled) {
+input:active:not(:disabled),
+select:active:not(:disabled) {
   border-color: var(--color-accent);
 }
 
-input:disabled {
+input:disabled,
+select:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }

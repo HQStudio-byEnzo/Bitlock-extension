@@ -1,5 +1,5 @@
 /**
- * BitLock background service worker.
+ * QVault background service worker.
  *
  * Credentials waiting for confirmation stay in memory only. They are never
  * written to chrome.storage in clear text. Losing them when Chrome suspends
@@ -38,7 +38,7 @@ function queuePendingCredential(value) {
   if (pendingTimer) clearTimeout(pendingTimer)
   pendingTimer = setTimeout(clearPendingCredential, PENDING_TTL_MS)
 
-  chrome.action.setBadgeBackgroundColor({ color: '#49de80' }).catch(() => {})
+  chrome.action.setBadgeBackgroundColor({ color: '#2b7fff' }).catch(() => {})
   chrome.action.setBadgeText({ text: '1' }).catch(() => {})
   return true
 }
@@ -46,7 +46,7 @@ function queuePendingCredential(value) {
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || typeof message.type !== 'string') return undefined
 
-  if (message.type === 'BITLOCK_CAPTURE_CREDENTIAL') {
+  if (message.type === 'QVAULT_CAPTURE_CREDENTIAL') {
     const queued = queuePendingCredential(message.credential)
     sendResponse({ ok: queued })
 
@@ -58,19 +58,19 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return undefined
   }
 
-  if (message.type === 'BITLOCK_PEEK_PENDING') {
+  if (message.type === 'QVAULT_PEEK_PENDING') {
     sendResponse({ pending: Boolean(pendingCredential) })
     return undefined
   }
 
-  if (message.type === 'BITLOCK_TAKE_PENDING') {
+  if (message.type === 'QVAULT_TAKE_PENDING') {
     const credential = pendingCredential
     clearPendingCredential()
     sendResponse({ credential })
     return undefined
   }
 
-  if (message.type === 'BITLOCK_CLEAR_PENDING') {
+  if (message.type === 'QVAULT_CLEAR_PENDING') {
     clearPendingCredential()
     sendResponse({ ok: true })
   }
