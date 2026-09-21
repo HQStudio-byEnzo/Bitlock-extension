@@ -23,6 +23,8 @@ const elements = {
   connectForm: document.getElementById('connect-form'),
   connectButton: document.getElementById('connect-btn'),
   tokenInput: document.getElementById('token-input'),
+  pairCodeInput: document.getElementById('pair-code-input'),
+  connectTokenButton: document.getElementById('connect-token-btn'),
   toggleTokenButton: document.getElementById('toggle-token-btn'),
   unlockForm: document.getElementById('unlock-form'),
   unlockButton: document.getElementById('unlock-submit-btn'),
@@ -64,7 +66,8 @@ const state = {
 
 document.addEventListener('DOMContentLoaded', initialize)
 
-elements.connectForm.addEventListener('submit', connectExtension)
+elements.connectForm.addEventListener('submit', pairExtension)
+elements.connectTokenButton.addEventListener('click', connectExtension)
 elements.serverSelect.addEventListener('change', () => setServer(elements.serverSelect.value))
 elements.unlockForm.addEventListener('submit', unlockVault)
 elements.addForm.addEventListener('submit', saveCredential)
@@ -143,6 +146,46 @@ async function apiRequest(path, options = {}) {
     throw new Error(data.message || `Erreur QVault (${response.status})`)
   }
   return data
+}
+
+async function pairExtension(event) {
+  event.preventDefault()
+  clearFieldError(elements.pairCodeInput)
+  const code = elements.pairCodeInput.value.trim()
+
+  if (!/^\d{6}$/.test(code)) {
+    setFieldError(elements.pairCodeInput)
+    showStatus('Saisissez le code à 6 chiffres affiché dans QVault.', 'error')
+    return
+  }
+
+  setServer(elements.serverSelect.value)
+  setLoading(elements.connectButton, true)
+  state.token = ''
+  try {
+    const data = await apiRequest('/api/extension/pair', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    })
+    const token = typeof data.token === 'string' ? data.token : ''
+    if (!TOKEN_PATTERN.test(token)) throw new Error('Réponse d’appairage invalide.')
+
+    state.token = token
+    await refreshEncryptedItems()
+    await chrome.storage.local.set({
+      [TOKEN_STORAGE_KEY]: token,
+      [SERVER_STORAGE_KEY]: state.apiUrl,
+    })
+    elements.pairCodeInput.value = ''
+    showView('unlock')
+    showStatus('Extension associée.', 'success')
+  } catch (error) {
+    state.token = ''
+    setFieldError(elements.pairCodeInput)
+    showStatus(messageFromError(error, 'Appairage impossible.'), 'error')
+  } finally {
+    setLoading(elements.connectButton, false)
+  }
 }
 
 async function connectExtension(event) {

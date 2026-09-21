@@ -70,6 +70,14 @@ if (!/MASTER_VERIFIER_TEXT = 'bitlock:\/\/master-verifier\/v1'/.test(popupJs)) {
   throw new Error('Le marqueur maître (gelé) a changé.')
 }
 
+if (!popupJs.includes('/api/extension/pair')) {
+  throw new Error('La route d’appairage est absente du popup.')
+}
+
+if (!popupJs.includes('\\d{6}')) {
+  throw new Error('Le format du code d’appairage (6 chiffres) est absent.')
+}
+
 for (const match of popupJs.matchAll(/getElementById\('([^']+)'\)/g)) {
   if (!popupHtml.includes(`id="${match[1]}"`)) {
     throw new Error(`Élément HTML absent: #${match[1]}`)

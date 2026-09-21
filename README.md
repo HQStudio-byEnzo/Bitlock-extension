@@ -5,7 +5,7 @@ enregistrer des identifiants depuis votre coffre-fort QVault.
 
 ## Fonctions
 
-- connexion à QVault (production ou instance locale) avec un jeton d’extension révocable ;
+- appairage par code à 6 chiffres (production ou instance locale) ;
 - déverrouillage avec le mot de passe maître, conservé uniquement en mémoire ;
 - affichage prioritaire des comptes correspondant au site actif ;
 - remplissage du username et du mot de passe ;
@@ -20,11 +20,12 @@ enregistrer des identifiants depuis votre coffre-fort QVault.
 1. Avoir un compte QVault (par défaut `https://qvault.hqmerchant.xyz`, ou votre
    instance locale sur `http://localhost:3000`).
 2. Se connecter à QVault.
-3. Ouvrir les paramètres de sécurité et créer un jeton d’extension.
-4. Copier le jeton commençant par `blx_`.
+3. Ouvrir les paramètres QVault et cliquer sur **Associer avec un code**.
+4. Saisir le code à 6 chiffres dans le popup de l’extension.
 
-Le jeton n’est affiché qu’au moment de sa création. Il peut être révoqué depuis
-les paramètres QVault.
+Le code est valable quelques minutes et à usage unique. La connexion repose
+ensuite sur un jeton d’extension révocable, visible dans la section « Avancé »
+des paramètres QVault.
 
 ## Installation
 

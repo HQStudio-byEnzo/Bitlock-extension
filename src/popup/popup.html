@@ -31,7 +31,7 @@
         <div class="view__intro">
           <p class="signal">connexion au coffre</p>
           <h1>Reliez votre coffre.</h1>
-          <p>Créez un jeton dans les paramètres QVault, puis collez-le ici. Le mot de passe maître n’est jamais enregistré.</p>
+          <p>Associez l’extension avec un code temporaire affiché dans QVault. Le mot de passe maître n’est jamais enregistré.</p>
         </div>
 
         <form id="connect-form" class="form-stack" novalidate>
@@ -41,17 +41,26 @@
             <option value="http://localhost:3000">Local — localhost:3000</option>
           </select>
 
-          <label for="token-input">Jeton d’extension</label>
-          <div class="field-with-action">
-            <input id="token-input" name="token" type="password" required autocomplete="off" spellcheck="false" placeholder="blx_…">
-            <button id="toggle-token-btn" class="field-action" type="button" aria-label="Afficher le jeton">Voir</button>
-          </div>
-          <p class="helper">Le jeton reste dans le stockage privé de l’extension et peut être révoqué depuis QVault.</p>
+          <label for="pair-code-input">Code d’appairage</label>
+          <input id="pair-code-input" name="pairCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required spellcheck="false" placeholder="123456">
+          <p class="helper">Dans QVault, ouvrez les paramètres et cliquez sur « Associer avec un code ».</p>
           <button id="connect-btn" class="button button--primary" type="submit">
-            <span class="button__idle">Connecter l’extension</span>
+            <span class="button__idle">Associer l’extension</span>
             <span class="button__loading">Vérification…</span>
           </button>
         </form>
+
+        <details class="fallback">
+          <summary>J’ai déjà un jeton</summary>
+          <div class="form-stack">
+            <label for="token-input">Jeton d’extension</label>
+            <div class="field-with-action">
+              <input id="token-input" name="token" type="password" autocomplete="off" spellcheck="false" placeholder="blx_…">
+              <button id="toggle-token-btn" class="field-action" type="button" aria-label="Afficher le jeton">Voir</button>
+            </div>
+            <button id="connect-token-btn" class="button" type="button">Connecter avec le jeton</button>
+          </div>
+        </details>
 
         <a id="settings-link" class="text-link" href="https://qvault.hqmerchant.xyz/dashboard/settings" target="_blank" rel="noreferrer">
           Ouvrir les paramètres QVault

@@ -352,6 +352,23 @@ input[data-state="success"] {
   white-space: nowrap;
 }
 
+.fallback {
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--color-rule);
+  padding-top: var(--space-3);
+}
+
+.fallback summary {
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.fallback .form-stack {
+  margin-top: var(--space-3);
+}
+
 .vault-toolbar,
 .modal-heading,
 .section-heading {
