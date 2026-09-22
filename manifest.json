@@ -41,6 +41,18 @@
     }
   ],
   "background": {
-    "service_worker": "src/background.js"
-  }
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/popup/fonts/*.woff2"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
+    }
+  ]
 }

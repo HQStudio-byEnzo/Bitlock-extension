@@ -14,7 +14,7 @@
           <span class="brand__mark" aria-hidden="true">Q</span>
           <span class="brand__copy">
             <strong>QVault</strong>
-            <small>extension</small>
+            <small id="server-label">extension</small>
           </span>
         </a>
         <div class="topbar__actions">
@@ -27,11 +27,11 @@
         </div>
       </header>
 
-      <section id="connect-view" class="view">
+      <section id="connect-view" class="view hidden">
         <div class="view__intro">
           <p class="signal">connexion au coffre</p>
           <h1>Reliez votre coffre.</h1>
-          <p>Associez l’extension avec un code temporaire affiché dans QVault. Le mot de passe maître n’est jamais enregistré.</p>
+          <p>Associez l’extension avec un code temporaire affiché dans QVault. Le mot de passe maître n’est jamais enregistré sur disque.</p>
         </div>
 
         <form id="connect-form" class="form-stack" novalidate>
@@ -71,13 +71,12 @@
         <div class="view__intro">
           <p class="signal">coffre connecté</p>
           <h1>Déverrouillez votre coffre.</h1>
-          <p>Votre secret sert uniquement à déchiffrer les identifiants dans cette fenêtre.</p>
+          <p>Le coffre reste déverrouillé quelques minutes pour remplir vos formulaires, puis se reverrouille automatiquement.</p>
         </div>
 
         <form id="unlock-form" class="form-stack" novalidate>
           <label for="master-password-input">Mot de passe maître</label>
           <input id="master-password-input" name="masterPassword" type="password" required autocomplete="off" placeholder="Votre secret maître">
-          <p class="helper">La fermeture du popup verrouille automatiquement la session.</p>
           <button id="unlock-submit-btn" class="button button--primary" type="submit">
             <span class="button__idle">Déverrouiller</span>
             <span class="button__loading">Déchiffrement…</span>
@@ -95,24 +94,24 @@
         </div>
 
         <label class="search-field" for="search-input">
-          <span aria-hidden="true">/</span>
+          <span aria-hidden="true">⌕</span>
           <input id="search-input" type="search" autocomplete="off" placeholder="Rechercher un site ou un compte">
         </label>
 
-        <section id="site-section" class="credential-section hidden" aria-labelledby="site-title">
-          <div class="section-heading">
+        <section id="site-section" class="group hidden" aria-labelledby="site-title">
+          <div class="group__head">
             <h2 id="site-title">Pour ce site</h2>
             <span id="site-count" class="count">0</span>
           </div>
-          <div id="site-list" class="credential-list"></div>
+          <div id="site-list" class="list"></div>
         </section>
 
-        <section class="credential-section" aria-labelledby="all-title">
-          <div class="section-heading">
+        <section class="group" aria-labelledby="all-title">
+          <div class="group__head">
             <h2 id="all-title">Tout le coffre</h2>
             <span id="all-count" class="count">0</span>
           </div>
-          <div id="all-list" class="credential-list"></div>
+          <div id="all-list" class="list"></div>
         </section>
       </section>
 
@@ -156,6 +155,6 @@
       <div id="status" class="status hidden" role="status" aria-live="polite"></div>
     </main>
 
-    <script src="popup.js"></script>
+    <script type="module" src="popup.js"></script>
   </body>
 </html>

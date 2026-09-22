@@ -1,26 +1,80 @@
-/* QVault extension design tokens */
+/* QVault extension tokens — mirrors the app palette (shadcn preset, olive base,
+ * blue accent) and embeds the same fonts (Geist, IBM Plex Mono). */
+
+@font-face {
+  font-family: "Geist Variable";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fonts/geist-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/ibm-plex-mono-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("fonts/ibm-plex-mono-600.woff2") format("woff2");
+}
+
 :root {
   color-scheme: dark;
-  --color-bg: oklch(12% 0.018 250);
-  --color-panel: oklch(16% 0.022 250);
-  --color-panel-raised: oklch(20% 0.026 250);
-  --color-rule: oklch(29% 0.03 250);
-  --color-rule-strong: oklch(39% 0.04 250);
-  --color-text: oklch(91% 0.016 250);
-  --color-text-muted: oklch(69% 0.028 250);
-  --color-text-faint: oklch(55% 0.025 250);
-  --color-accent: oklch(70% 0.16 260);
-  --color-accent-soft: oklch(70% 0.16 260 / 0.12);
-  --color-accent-ink: oklch(16% 0.02 260);
-  --color-focus: oklch(80% 0.14 260);
-  --color-danger: oklch(68% 0.18 28);
-  --color-danger-soft: oklch(68% 0.18 28 / 0.12);
-  --color-warning: oklch(80% 0.15 84);
-  --color-success: oklch(80% 0.19 145);
-  --color-shadow: oklch(5% 0.01 250 / 0.38);
 
-  --font-body: "Segoe UI Variable", "Segoe UI", Aptos, sans-serif;
-  --font-mono: "Cascadia Mono", Consolas, monospace;
+  /* Surface scale (shadcn olive base, dark theme). */
+  --surface-50: 0.988 0.003 106.5;
+  --surface-100: 0.96 0.004 106.5;
+  --surface-200: 0.90 0.007 106.5;
+  --surface-300: 0.80 0.014 106.5;
+  --surface-400: 0.70 0.021 106.9;
+  --surface-500: 0.58 0.031 107.3;
+  --surface-600: 0.46 0.026 107.3;
+  --surface-700: 0.36 0.022 107.3;
+  --surface-800: 0.30 0.018 107.3;
+  --surface-900: 0.228 0.013 107.4;
+  --surface-950: 0.153 0.006 107.1;
+
+  /* Accent scale (blue). */
+  --accent-300: 0.809 0.105 251.8;
+  --accent-400: 0.707 0.165 254.6;
+  --accent-500: 0.623 0.214 259.8;
+  --accent-600: 0.546 0.245 262.9;
+  --accent-700: 0.488 0.243 264.4;
+
+  --color-canvas: oklch(var(--surface-950));
+  --color-panel: oklch(var(--surface-900));
+  --color-panel-raised: oklch(var(--surface-800));
+  --color-rule: oklch(var(--surface-800));
+  --color-rule-strong: oklch(var(--surface-700));
+  --color-text: oklch(var(--surface-100));
+  --color-text-muted: oklch(var(--surface-400));
+  --color-text-faint: oklch(var(--surface-500));
+  --color-ink: oklch(var(--surface-50));
+  --color-accent: oklch(var(--accent-500));
+  --color-accent-strong: oklch(var(--accent-400));
+  --color-accent-soft: oklch(var(--accent-500) / 0.12);
+  --color-accent-rule: oklch(var(--accent-500) / 0.30);
+  --color-accent-solid: oklch(var(--accent-600));
+  --color-accent-solid-strong: oklch(var(--accent-700));
+  --color-accent-ink: oklch(0.99 0.005 255);
+  --color-focus: oklch(var(--accent-400) / 0.5);
+  --color-danger: oklch(0.577 0.245 27.3);
+  --color-danger-soft: oklch(0.577 0.245 27.3 / 0.12);
+  --color-success: oklch(0.72 0.15 149);
+  --color-warning: oklch(0.80 0.14 80);
+  --color-overlay: oklch(0.10 0.008 107 / 0.68);
+  --color-shadow: var(--color-overlay);
+
+  --font-body: "Geist Variable", "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -30,15 +84,19 @@
   --space-6: 1.5rem;
   --space-8: 2rem;
 
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+
   --text-xs: 0.6875rem;
   --text-sm: 0.8125rem;
   --text-base: 0.9375rem;
   --text-lg: 1.125rem;
 
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
+  --shadow-pop: 0 1.5rem 4.5rem oklch(0 0 0 / 0.6);
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-fast: 120ms;
+  --dur-fast: 110ms;
   --dur-base: 180ms;
 }
