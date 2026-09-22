@@ -11,7 +11,7 @@
     <main id="app" class="shell">
       <header class="topbar">
         <a id="brand-link" class="brand" href="https://qvault.hqmerchant.xyz/" target="_blank" rel="noreferrer">
-          <span class="brand__mark" aria-hidden="true">Q</span>
+          <img class="brand__mark" src="../../icons/qvault-mark.png" alt="" aria-hidden="true">
           <span class="brand__copy">
             <strong>QVault</strong>
             <small id="server-label">extension</small>
@@ -19,10 +19,10 @@
         </a>
         <div class="topbar__actions">
           <button id="lock-btn" class="icon-button hidden" type="button" title="Verrouiller" aria-label="Verrouiller le coffre">
-            <span aria-hidden="true">⌁</span>
+            <span data-icon="lock" data-icon-size="18"></span>
           </button>
           <button id="disconnect-btn" class="icon-button hidden" type="button" title="Déconnecter l’extension" aria-label="Déconnecter l’extension">
-            <span aria-hidden="true">×</span>
+            <span data-icon="disconnect" data-icon-size="18"></span>
           </button>
         </div>
       </header>
@@ -56,7 +56,9 @@
             <label for="token-input">Jeton d’extension</label>
             <div class="field-with-action">
               <input id="token-input" name="token" type="password" autocomplete="off" spellcheck="false" placeholder="blx_…">
-              <button id="toggle-token-btn" class="field-action" type="button" aria-label="Afficher le jeton">Voir</button>
+              <button id="toggle-token-btn" class="field-action" type="button" aria-label="Afficher le jeton">
+                <span data-icon="view" data-icon-size="18"></span>
+              </button>
             </div>
             <button id="connect-token-btn" class="button" type="button">Connecter avec le jeton</button>
           </div>
@@ -90,11 +92,14 @@
             <p class="signal">coffre déverrouillé</p>
             <h1>Identifiants</h1>
           </div>
-          <button id="open-add-btn" class="button button--compact" type="button">+ Ajouter</button>
+          <button id="open-add-btn" class="button button--compact" type="button">
+            <span data-icon="add" data-icon-size="15"></span>
+            Ajouter
+          </button>
         </div>
 
         <label class="search-field" for="search-input">
-          <span aria-hidden="true">⌕</span>
+          <span data-icon="search" data-icon-size="16" aria-hidden="true"></span>
           <input id="search-input" type="search" autocomplete="off" placeholder="Rechercher un site ou un compte">
         </label>
 
@@ -121,7 +126,9 @@
             <p id="add-signal" class="signal">nouvel identifiant</p>
             <h1 id="add-title">Ajouter au coffre</h1>
           </div>
-          <button id="close-add-btn" class="icon-button" type="button" aria-label="Fermer">×</button>
+          <button id="close-add-btn" class="icon-button" type="button" aria-label="Fermer">
+            <span data-icon="close" data-icon-size="18"></span>
+          </button>
         </div>
 
         <form id="add-form" class="form-stack" novalidate>
@@ -137,11 +144,13 @@
           <label for="add-password">Mot de passe</label>
           <div class="field-with-action">
             <input id="add-password" name="password" type="password" required maxlength="4096" autocomplete="new-password" placeholder="Mot de passe">
-            <button id="generate-password-btn" class="field-action" type="button">Générer</button>
+            <button id="generate-password-btn" class="field-action" type="button">
+              <span data-icon="generate" data-icon-size="18"></span>
+            </button>
           </div>
 
           <div class="security-note">
-            <span aria-hidden="true">◇</span>
+            <span data-icon="lock" data-icon-size="18" aria-hidden="true"></span>
             <p>Chiffrement AES-256-GCM avant l’envoi. Seul le contenu chiffré atteint QVault.</p>
           </div>
 

@@ -7,8 +7,10 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const scriptFiles = [
   'src/background.js',
   'src/content/autosave.js',
+  'src/content/icons.js',
   'src/popup/popup.js',
   'src/shared/crypto.js',
+  'src/shared/icons.js',
   'src/shared/protocol.js',
 ]
 
@@ -49,6 +51,9 @@ const webResources = (manifest.web_accessible_resources || []).flatMap(entry => 
 if (!webResources.includes('src/popup/fonts/*.woff2')) {
   throw new Error('Les polices ne sont pas exposées via web_accessible_resources.')
 }
+if (!webResources.includes('icons/icon-48.png')) {
+  throw new Error('Le logo de la carte inline n’est pas exposé.')
+}
 
 for (const font of ['geist-latin.woff2', 'ibm-plex-mono-400.woff2', 'ibm-plex-mono-600.woff2']) {
   try {
@@ -58,15 +63,33 @@ for (const font of ['geist-latin.woff2', 'ibm-plex-mono-400.woff2', 'ibm-plex-mo
   }
 }
 
+for (const [size, file] of Object.entries(manifest.icons || {})) {
+  if (!String(file).endsWith('.png')) {
+    throw new Error(`L’icône ${size} doit être un PNG (Chrome n’accepte pas le SVG).`)
+  }
+  try {
+    await readFile(join(root, file))
+  } catch {
+    throw new Error(`Icône absente: ${file}`)
+  }
+}
+
+const contentJs = manifest.content_scripts?.[0]?.js || []
+if (contentJs[0] !== 'src/content/icons.js' || !contentJs.includes('src/content/autosave.js')) {
+  throw new Error('Les scripts de contenu (icônes puis autosave) sont mal déclarés.')
+}
+
 const popupHtml = await read('src/popup/popup.html')
 const popupJs = await read('src/popup/popup.js')
 const backgroundJs = await read('src/background.js')
 const autosaveJs = await read('src/content/autosave.js')
 const cryptoJs = await read('src/shared/crypto.js')
 const protocolJs = await read('src/shared/protocol.js')
+const sharedIconsJs = await read('src/shared/icons.js')
+const contentIconsJs = await read('src/content/icons.js')
 const popupCss = await read('src/popup/popup.css')
 const tokensCss = await read('src/popup/tokens.css')
-const allSources = [popupHtml, popupJs, backgroundJs, autosaveJs, cryptoJs, protocolJs, popupCss, tokensCss].join('\n')
+const allSources = [popupHtml, popupJs, backgroundJs, autosaveJs, cryptoJs, protocolJs, sharedIconsJs, contentIconsJs, popupCss, tokensCss].join('\n')
 
 if (/kipit-two|bitlock-two\.vercel\.app|bitlock\.hqmerchant\.xyz/i.test(allSources)) {
   throw new Error('Une ancienne URL est encore présente.')

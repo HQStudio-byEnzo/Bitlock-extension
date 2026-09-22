@@ -3,20 +3,22 @@
   "name": "QVault — Coffre-fort local",
   "short_name": "QVault",
   "description": "Remplissez et enregistrez vos identifiants depuis votre coffre-fort QVault.",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "minimum_chrome_version": "116",
   "icons": {
-    "16": "icons/icon-16.svg",
-    "48": "icons/icon-48.svg",
-    "128": "icons/icon-128.svg"
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
   },
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_title": "Ouvrir QVault",
     "default_icon": {
-      "16": "icons/icon-16.svg",
-      "48": "icons/icon-48.svg",
-      "128": "icons/icon-128.svg"
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
     }
   },
   "permissions": [
@@ -34,6 +36,7 @@
         "https://*/*"
       ],
       "js": [
+        "src/content/icons.js",
         "src/content/autosave.js"
       ],
       "run_at": "document_idle",
@@ -47,7 +50,9 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "src/popup/fonts/*.woff2"
+        "src/popup/fonts/*.woff2",
+        "icons/icon-48.png",
+        "icons/qvault-mark.png"
       ],
       "matches": [
         "http://*/*",

@@ -1,5 +1,6 @@
 import { MESSAGES, DEFAULT_SERVER, SERVERS } from '../shared/protocol.js'
 import { generatePassword } from '../shared/crypto.js'
+import { icon } from '../shared/icons.js'
 
 const elements = {
   connectView: document.getElementById('connect-view'),
@@ -103,10 +104,20 @@ function showView(name) {
 /* ------------------------------------------------------------------- init */
 
 async function initialize() {
+  hydrateIcons()
   setServer(DEFAULT_SERVER)
   await readActivePage()
   await refreshState()
   await consumePendingCredential()
+}
+
+/** Replace every [data-icon] placeholder with its Hugeicons SVG. */
+function hydrateIcons(root = document) {
+  root.querySelectorAll('[data-icon]').forEach((node) => {
+    const name = node.getAttribute('data-icon')
+    const size = Number(node.getAttribute('data-icon-size') || 18)
+    if (name && !node.firstChild) node.innerHTML = icon(name, size)
+  })
 }
 
 async function refreshState() {
@@ -274,14 +285,13 @@ function initial(value) {
   return (letter || 'Q').toUpperCase()
 }
 
-function actionButton(label, title, glyph, onClick, extraClass = '') {
+function actionButton(title, iconName, onClick, extraClass = '') {
   const button = document.createElement('button')
   button.type = 'button'
   button.className = `icon-action ${extraClass}`.trim()
   button.title = title
   button.setAttribute('aria-label', title)
-  button.textContent = glyph
-  button.dataset.label = label
+  button.innerHTML = icon(iconName, 17)
   button.addEventListener('click', onClick)
   return button
 }
@@ -316,12 +326,12 @@ function renderList(target, items, emphasizeFill) {
     const actions = document.createElement('div')
     actions.className = 'item__actions'
 
-    const fill = actionButton('Remplir', 'Remplir cette page', '⤵', () => fillItem(item, fill), emphasizeFill ? 'is-primary' : '')
+    const fill = actionButton('Remplir cette page', 'fill', () => fillItem(item, fill), emphasizeFill ? 'is-primary' : '')
     fill.disabled = !state.pageContext?.hasPasswordField
     if (fill.disabled) fill.title = 'Aucun champ de mot de passe détecté sur cette page'
-    const copyPassword = actionButton('Mot de passe', 'Copier le mot de passe', '⧉', () => copyPasswordItem(item, copyPassword))
+    const copyPassword = actionButton('Copier le mot de passe', 'copy', () => copyPasswordItem(item, copyPassword))
     actions.append(fill, copyPassword)
-    if (item.url) actions.append(actionButton('Ouvrir', 'Ouvrir le site', '↗', () => openItem(item)))
+    if (item.url) actions.append(actionButton('Ouvrir le site', 'open', () => openItem(item)))
 
     row.append(avatar, copy, actions)
     target.appendChild(row)
@@ -340,10 +350,10 @@ async function fillItem(item, button) {
       credential: { username: item.username, password: item.password },
     })
     if (!response?.ok) throw new Error('Aucun formulaire compatible sur cette page.')
-    setTransientState(button, 'success', '✓')
+    setTransientState(button, 'success', 'success')
     showStatus('Identifiant rempli.', 'success')
   } catch (error) {
-    setTransientState(button, 'error', '✕')
+    setTransientState(button, 'error', 'error')
     showStatus(messageFromError(error, 'Remplissage impossible.'), 'error')
   } finally {
     setLoading(button, false)
@@ -353,10 +363,10 @@ async function fillItem(item, button) {
 async function copyPasswordItem(item, button) {
   try {
     await navigator.clipboard.writeText(item.password)
-    setTransientState(button, 'success', '✓')
+    setTransientState(button, 'success', 'success')
     showStatus('Mot de passe copié. Pensez à vider le presse-papiers.', 'success')
   } catch {
-    setTransientState(button, 'error', '✕')
+    setTransientState(button, 'error', 'error')
     showStatus('Copie impossible.', 'error')
   }
 }
@@ -445,7 +455,7 @@ function generateIntoPasswordField() {
 function toggleTokenVisibility() {
   const visible = elements.tokenInput.type === 'text'
   elements.tokenInput.type = visible ? 'password' : 'text'
-  elements.toggleTokenButton.textContent = visible ? 'Voir' : 'Masquer'
+  elements.toggleTokenButton.innerHTML = icon(visible ? 'view' : 'hide', 18)
   elements.toggleTokenButton.setAttribute('aria-label', visible ? 'Afficher le jeton' : 'Masquer le jeton')
 }
 
@@ -455,13 +465,13 @@ function setLoading(button, loading) {
   else if (button.dataset.state === 'loading') delete button.dataset.state
 }
 
-function setTransientState(button, stateName, glyph) {
-  const original = button.textContent
+function setTransientState(button, stateName, iconName) {
+  const original = button.innerHTML
   button.dataset.state = stateName
-  button.textContent = glyph
+  button.innerHTML = icon(iconName, 17)
   window.setTimeout(() => {
     if (button.dataset.state === stateName) delete button.dataset.state
-    button.textContent = original
+    button.innerHTML = original
   }, 1400)
 }
 

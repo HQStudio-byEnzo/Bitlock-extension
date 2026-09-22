@@ -38,6 +38,30 @@
   let hideTimer = null
   let repositionQueued = false
 
+  const ICONS = globalThis.__qvaultIcons || {}
+
+  function svgIcon(name, size = 18) {
+    const body = ICONS[name]
+    if (!body) return ''
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" color="currentColor" aria-hidden="true">${body}</svg>`
+  }
+
+  function iconSpan(name, size = 18, className = 'icon') {
+    const span = document.createElement('span')
+    span.className = className
+    span.innerHTML = svgIcon(name, size)
+    return span
+  }
+
+  function markImage() {
+    const img = document.createElement('img')
+    img.className = 'mark'
+    img.src = chrome.runtime.getURL('icons/icon-48.png')
+    img.alt = ''
+    img.setAttribute('aria-hidden', 'true')
+    return img
+  }
+
   /* ------------------------------------------------------------- detection */
 
   function isVisible(input) {
@@ -142,6 +166,8 @@
       ${fontFace()}
       :host { all: initial; }
       *, *::before, *::after { box-sizing: border-box; }
+      svg { display: block; }
+      .icon { display: inline-flex; }
       .card {
         --bg: oklch(15.3% 0.006 107.1);
         --panel: oklch(22.8% 0.013 107.4);
@@ -158,7 +184,7 @@
         width: 340px;
         max-width: calc(100vw - 16px);
         border: 1px solid var(--rule);
-        border-radius: 12px;
+        border-radius: 16px;
         background: var(--bg);
         box-shadow: 0 24px 64px oklch(0 0 0 / 0.6);
         color: var(--text);
@@ -166,25 +192,25 @@
         overflow: hidden;
       }
       .head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
-      .mark { display: grid; place-items: center; width: 24px; height: 24px; flex: 0 0 auto; border: 1px solid var(--accent-strong); border-radius: 6px; color: var(--accent-strong); font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 12px; }
+      .mark { width: 26px; height: 26px; flex: 0 0 auto; border-radius: 8px; object-fit: contain; background: color-mix(in oklab, var(--accent) 14%, transparent); }
       .head strong { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 12px; }
       .head small { display: block; color: var(--faint); font-size: 11px; }
       .titles { flex: 1; min-width: 0; }
       .titles strong, .titles small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .close { width: 28px; height: 28px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; }
+      .close { width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer; }
       .close:hover { background: var(--raised); color: var(--text); }
       .body { padding: 6px; max-height: 260px; overflow-y: auto; }
-      .row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 0; border-radius: 8px; background: transparent; color: inherit; cursor: pointer; text-align: left; font: inherit; }
+      .row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 0; border-radius: 10px; background: transparent; color: inherit; cursor: pointer; text-align: left; font: inherit; transition: background-color 120ms ease; }
       .row:hover, .row:focus-visible { background: var(--raised); outline: none; }
       .row:focus-visible { box-shadow: 0 0 0 2px var(--focus); }
-      .avatar { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 auto; border: 1px solid var(--rule); border-radius: 7px; background: var(--panel); color: var(--accent-strong); font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 12px; }
+      .avatar { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--panel); color: var(--accent-strong); font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 12px; }
       .copy { flex: 1; min-width: 0; }
       .copy strong { display: block; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .copy small { display: block; color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .go { color: var(--accent-strong); font-size: 11px; font-weight: 600; }
+      .go { display: inline-flex; color: var(--accent-strong); }
       .note { padding: 14px 12px; color: var(--muted); text-align: center; }
-      .foot { display: flex; gap: 6px; padding: 8px; border-top: 1px solid var(--rule); }
-      button.act { flex: 1; min-height: 32px; padding: 0 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); color: var(--text); cursor: pointer; font: 600 12px "Geist Variable", sans-serif; }
+      .foot { display: flex; gap: 8px; padding: 8px; border-top: 1px solid var(--rule); }
+      button.act { flex: 1; min-height: 34px; padding: 0 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--panel); color: var(--text); cursor: pointer; font: 600 12px "Geist Variable", sans-serif; transition: background-color 120ms ease, border-color 120ms ease; }
       button.act:hover { background: var(--raised); }
       button.act.primary { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
       button.act.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
@@ -266,13 +292,12 @@
   }
 
   function head(title, subtitle) {
-    const mark = element('span', { class: 'mark', text: 'Q', 'aria-hidden': 'true' })
     const titles = element('div', { class: 'titles' }, [
       element('strong', { text: title }),
       subtitle ? element('small', { text: subtitle }) : null,
     ])
-    const close = element('button', { class: 'close', type: 'button', 'aria-label': 'Fermer', text: '×', onclick: closeCard })
-    return element('header', { class: 'head' }, [mark, titles, close])
+    const close = element('button', { class: 'close', type: 'button', 'aria-label': 'Fermer', onclick: closeCard }, [iconSpan('close', 18)])
+    return element('header', { class: 'head' }, [markImage(), titles, close])
   }
 
   function initial(value) {
@@ -327,6 +352,7 @@
 
     const rows = items.map(item => element('button', {
       class: 'row', type: 'button',
+      'aria-label': `Remplir ${item.label || hostname()}`,
       onclick: () => fill(item),
     }, [
       element('span', { class: 'avatar', text: initial(item.label), 'aria-hidden': 'true' }),
@@ -334,7 +360,7 @@
         element('strong', { text: item.label || hostname() }),
         item.username ? element('small', { text: item.username }) : null,
       ]),
-      element('span', { class: 'go', text: 'Remplir' }),
+      iconSpan('fill', 18, 'go'),
     ]))
 
     render([
