@@ -50,3 +50,11 @@ export function allowedFor(role, type) {
   if (role === 'content') return CONTENT_MESSAGES.has(type)
   return false
 }
+
+/** Code d'appairage QVault : 10 caractères parmi 30, saisie tolérante (tiret, minuscules). */
+const PAIR_CODE_PATTERN = /^[ABCDEFGHJKMNPQRSTVWXYZ23456789]{10}$/
+
+export function normalizePairCode(value) {
+  const code = String(value || '').toUpperCase().replace(/[\s-]/g, '')
+  return PAIR_CODE_PATTERN.test(code) ? code : null
+}

@@ -1,7 +1,7 @@
 import { MESSAGES, DEFAULT_SERVER, SERVERS } from '../shared/protocol.js'
 import { generatePassword } from '../shared/crypto.js'
 import { icon } from '../shared/icons.js'
-import { hostOf, matchesHost } from '../shared/policy.js'
+import { hostOf, matchesHost, normalizePairCode } from '../shared/policy.js'
 
 const elements = {
   connectView: document.getElementById('connect-view'),
@@ -155,10 +155,10 @@ async function readActivePage() {
 async function pairExtension(event) {
   event.preventDefault()
   clearFieldError(elements.pairCodeInput)
-  const code = elements.pairCodeInput.value.trim()
-  if (!/^\d{6}$/.test(code)) {
+  const code = normalizePairCode(elements.pairCodeInput.value)
+  if (!code) {
     setFieldError(elements.pairCodeInput)
-    showStatus('Saisissez le code à 6 chiffres affiché dans QVault.', 'error')
+    showStatus('Saisissez le code à 10 caractères affiché dans QVault.', 'error')
     return
   }
 

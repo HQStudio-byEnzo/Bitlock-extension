@@ -5,7 +5,7 @@ enregistrer des identifiants depuis votre coffre-fort QVault.
 
 ## Fonctions
 
-- appairage par code à 6 chiffres (production ou instance locale) ;
+- appairage par code à 10 caractères (production ou instance locale) ;
 - déverrouillage avec le mot de passe maître, conservé uniquement en mémoire ;
 - affichage prioritaire des comptes correspondant au site actif ;
 - remplissage du username et du mot de passe ;
@@ -21,7 +21,7 @@ enregistrer des identifiants depuis votre coffre-fort QVault.
    instance locale sur `http://localhost:3000`).
 2. Se connecter à QVault.
 3. Ouvrir les paramètres QVault et cliquer sur **Associer avec un code**.
-4. Saisir le code à 6 chiffres dans le popup de l’extension.
+4. Saisir le code à 10 caractères (ex. `ABCDE-FGHJK`) dans le popup de l’extension.
 
 Le code est valable quelques minutes et à usage unique. La connexion repose
 ensuite sur un jeton d’extension révocable, visible dans la section « Avancé »

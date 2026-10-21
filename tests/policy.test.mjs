@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { hostOf, matchesHost, senderRole, allowedFor } from '../src/shared/policy.js'
+import { hostOf, matchesHost, senderRole, allowedFor, normalizePairCode } from '../src/shared/policy.js'
 
 const runtime = { id: 'ext', getURL: path => `chrome-extension://ext/${path}` }
 const popup = { id: 'ext', url: 'chrome-extension://ext/src/popup/popup.html' }
@@ -39,4 +39,11 @@ test('un script de contenu n’a pas accès aux commandes du coffre', () => {
     assert.equal(allowedFor('content', type), true, type)
   }
   assert.equal(allowedFor(null, 'QVAULT_MATCHES_FOR_HOST'), false)
+})
+
+test('le code d’appairage suit le format du serveur', () => {
+  assert.equal(normalizePairCode('abcde-fghjk'), 'ABCDEFGHJK')
+  assert.equal(normalizePairCode(' ABCDE FGHJK '), 'ABCDEFGHJK')
+  assert.equal(normalizePairCode('123456'), null)
+  assert.equal(normalizePairCode('ABCDEFGHJ0'), null)
 })

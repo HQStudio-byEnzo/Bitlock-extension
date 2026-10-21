@@ -24,7 +24,7 @@ import {
   LEGACY_TOKEN_STORAGE_KEY,
   SESSION_STORAGE_KEY,
 } from './shared/protocol.js'
-import { allowedFor, hostOf, matchesHost, senderRole } from './shared/policy.js'
+import { allowedFor, hostOf, matchesHost, normalizePairCode, senderRole } from './shared/policy.js'
 
 // The master password sits in session storage: keep it out of content scripts.
 chrome.storage.session.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' }).catch(() => {})
@@ -232,8 +232,8 @@ async function handle(message, role, sender) {
     }
 
     case MESSAGES.PAIR: {
-      const code = String(message.code || '').trim()
-      if (!/^\d{6}$/.test(code)) throw new Error('Code d’appairage invalide.')
+      const code = normalizePairCode(message.code)
+      if (!code) throw new Error('Code d’appairage invalide.')
       const apiUrl = message.apiUrl === 'http://localhost:3000' ? 'http://localhost:3000' : DEFAULT_SERVER
       let response
       try {
