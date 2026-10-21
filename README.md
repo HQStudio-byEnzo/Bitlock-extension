@@ -5,7 +5,7 @@ enregistrer des identifiants depuis votre coffre-fort QVault.
 
 ## Fonctions
 
-- appairage par code à 6 chiffres (production ou instance locale) ;
+- appairage par code à 10 caractères (production ou instance locale) ;
 - déverrouillage avec le mot de passe maître, conservé uniquement en mémoire ;
 - affichage prioritaire des comptes correspondant au site actif ;
 - remplissage du username et du mot de passe ;
@@ -21,7 +21,7 @@ enregistrer des identifiants depuis votre coffre-fort QVault.
    instance locale sur `http://localhost:3000`).
 2. Se connecter à QVault.
 3. Ouvrir les paramètres QVault et cliquer sur **Associer avec un code**.
-4. Saisir le code à 6 chiffres dans le popup de l’extension.
+4. Saisir le code à 10 caractères (ex. `ABCDE-FGHJK`) dans le popup de l’extension.
 
 Le code est valable quelques minutes et à usage unique. La connexion repose
 ensuite sur un jeton d’extension révocable, visible dans la section « Avancé »
@@ -63,12 +63,21 @@ toujours écrits au format courant.
 ## Validation
 
 ```powershell
+bun install
 bun run test
 ```
 
 Le validateur contrôle la syntaxe JavaScript, le manifeste, les permissions,
 les hôtes autorisés, les identifiants DOM, l’absence d’ancienne marque ou URL,
 le facteur PBKDF2, le marqueur maître gelé et les erreurs d’encodage.
+
+Les tests `tests/*.test.mjs` (Node, jsdom) couvrent la sécurité du remplissage :
+- une page ne peut ni lire la carte (shadow root fermé) ni la cliquer par script ;
+- remplir ou enregistrer exige un vrai clic sur une carte visible depuis 400 ms
+  (`src/content/guard.js`, IntersectionObserver v2) ;
+- un identifiant n’est proposé que sur son hôte exact, sans sous-domaine ;
+- un script de contenu ne parle que pour son propre onglet : pas de liste du
+  coffre, pas d’enregistrement pour un autre site (`src/shared/policy.js`).
 
 ## Structure
 
@@ -77,7 +86,9 @@ manifest.json
 icons/
 scripts/validate.mjs
 src/background.js
+src/content/guard.js
 src/content/autosave.js
+src/shared/policy.js
 src/popup/popup.html
 src/popup/popup.js
 src/popup/popup.css

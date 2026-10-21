@@ -8,6 +8,7 @@ const scriptFiles = [
   'src/background.js',
   'src/content/autosave.js',
   'src/content/icons.js',
+  'src/content/guard.js',
   'src/popup/popup.js',
   'src/shared/crypto.js',
   'src/shared/icons.js',
@@ -119,8 +120,8 @@ if (!backgroundJs.includes('/api/extension/pair')) {
   throw new Error('La route d’appairage est absente du background.')
 }
 
-if (!popupJs.includes('\\d{6}')) {
-  throw new Error('Le format du code d’appairage (6 chiffres) est absent.')
+if (!popupJs.includes('normalizePairCode') || !backgroundJs.includes('normalizePairCode')) {
+  throw new Error('Le format du code d’appairage (10 caractères) n’est pas vérifié.')
 }
 
 if (!autosaveJs.includes('MATCHES_FOR_HOST') || !autosaveJs.includes('QVAULT_SAVE')) {

@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun scripts/validate.mjs",
+    "test": "bun scripts/validate.mjs && node --test tests/*.test.mjs",
     "validate": "bun scripts/validate.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.3"
   }
 }
