@@ -63,12 +63,21 @@ toujours écrits au format courant.
 ## Validation
 
 ```powershell
+bun install
 bun run test
 ```
 
 Le validateur contrôle la syntaxe JavaScript, le manifeste, les permissions,
 les hôtes autorisés, les identifiants DOM, l’absence d’ancienne marque ou URL,
 le facteur PBKDF2, le marqueur maître gelé et les erreurs d’encodage.
+
+Les tests `tests/*.test.mjs` (Node, jsdom) couvrent la sécurité du remplissage :
+- une page ne peut ni lire la carte (shadow root fermé) ni la cliquer par script ;
+- remplir ou enregistrer exige un vrai clic sur une carte visible depuis 400 ms
+  (`src/content/guard.js`, IntersectionObserver v2) ;
+- un identifiant n’est proposé que sur son hôte exact, sans sous-domaine ;
+- un script de contenu ne parle que pour son propre onglet : pas de liste du
+  coffre, pas d’enregistrement pour un autre site (`src/shared/policy.js`).
 
 ## Structure
 
@@ -77,7 +86,9 @@ manifest.json
 icons/
 scripts/validate.mjs
 src/background.js
+src/content/guard.js
 src/content/autosave.js
+src/shared/policy.js
 src/popup/popup.html
 src/popup/popup.js
 src/popup/popup.css

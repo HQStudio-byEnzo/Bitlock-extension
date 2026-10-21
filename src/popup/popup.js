@@ -1,6 +1,7 @@
 import { MESSAGES, DEFAULT_SERVER, SERVERS } from '../shared/protocol.js'
 import { generatePassword } from '../shared/crypto.js'
 import { icon } from '../shared/icons.js'
+import { hostOf, matchesHost } from '../shared/policy.js'
 
 const elements = {
   connectView: document.getElementById('connect-view'),
@@ -342,6 +343,12 @@ async function fillItem(item, button) {
   if (!state.activeTab?.id) {
     showStatus('Aucun onglet compatible.', 'error')
     return
+  }
+  // Remplir le mot de passe d'un autre site sur cette page est le scénario du hameçonnage.
+  const pageHost = hostOf(state.activeTab.url)
+  if (!matchesHost(item.url, pageHost)) {
+    const site = hostOf(item.url) || 'un autre site'
+    if (!window.confirm(`Cet identifiant est enregistré pour ${site}, pas pour ${pageHost || 'cette page'}. Le remplir quand même ?`)) return
   }
   setLoading(button, true)
   try {

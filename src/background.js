@@ -24,6 +24,10 @@ import {
   LEGACY_TOKEN_STORAGE_KEY,
   SESSION_STORAGE_KEY,
 } from './shared/protocol.js'
+import { allowedFor, hostOf, matchesHost, senderRole } from './shared/policy.js'
+
+// The master password sits in session storage: keep it out of content scripts.
+chrome.storage.session.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' }).catch(() => {})
 
 const PENDING_TTL_MS = 2 * 60 * 1000
 
@@ -36,14 +40,6 @@ let sessionTimer = null
 let cachedItems = null
 
 /* ---------------------------------------------------------------- helpers */
-
-function hostnameFromUrl(value) {
-  try {
-    return new URL(value).hostname.replace(/^www\./, '').toLowerCase()
-  } catch {
-    return ''
-  }
-}
 
 function sanitizeCredential(value) {
   if (!value || typeof value !== 'object') return null
@@ -171,12 +167,7 @@ async function ensureItems() {
 }
 
 function matchItems(items, hostname) {
-  const target = String(hostname || '').replace(/^www\./, '').toLowerCase()
-  if (!target) return []
-  return items.filter((item) => {
-    const itemHost = hostnameFromUrl(item.url)
-    return itemHost && (itemHost === target || itemHost.endsWith(`.${target}`) || target.endsWith(`.${itemHost}`))
-  })
+  return items.filter(item => matchesHost(item.url, hostname))
 }
 
 async function verifyMasterPassword(masterPassword) {
@@ -215,7 +206,10 @@ function queuePendingCredential(value) {
 
 /* ----------------------------------------------------------------- router */
 
-async function handle(message) {
+async function handle(message, role, sender) {
+  // A content script speaks for its own tab only: its host comes from Chrome.
+  const pageHost = role === 'content' ? hostOf(sender.url) : ''
+
   switch (message.type) {
     case MESSAGES.GET_STATE: {
       const { token, apiUrl } = await getConfig()
@@ -297,7 +291,8 @@ async function handle(message) {
     case MESSAGES.MATCHES_FOR_HOST: {
       if (!(await touchSession())) return { locked: true, items: [] }
       const items = await ensureItems()
-      return { locked: false, items: matchItems(items, message.hostname) }
+      const hostname = role === 'content' ? pageHost : message.hostname
+      return { locked: false, items: matchItems(items, hostname) }
     }
 
     case MESSAGES.SAVE: {
@@ -307,6 +302,14 @@ async function handle(message) {
       const username = String(message.username || '').slice(0, 512)
       const password = String(message.password || '')
       if (!label || !password) throw new Error('Nom du site et mot de passe requis.')
+      if (role === 'content') {
+        // A page may only save or update a credential for itself.
+        if (hostOf(url) !== pageHost) throw new Error('Adresse différente de la page.')
+        if (typeof message.id === 'string' && message.id) {
+          const current = (await ensureItems()).find(item => item.id === message.id)
+          if (!current || !matchesHost(current.url, pageHost)) throw new Error('Identifiant introuvable pour ce site.')
+        }
+      }
 
       const encrypted = await encryptData(JSON.stringify({
         schema: 'qvault.credentials/v1',
@@ -317,7 +320,6 @@ async function handle(message) {
       const body = JSON.stringify({
         label,
         url,
-        username,
         payload: serializeEncryptedPayload(encrypted),
         iv: encrypted.iv,
       })
@@ -335,6 +337,7 @@ async function handle(message) {
     }
 
     case MESSAGES.CAPTURE_CREDENTIAL: {
+      if (hostOf(message.credential?.url) !== pageHost) return { ok: false }
       const queued = queuePendingCredential(message.credential)
       if (queued) {
         chrome.action.openPopup().catch(() => {})
@@ -363,9 +366,14 @@ async function handle(message) {
   }
 }
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || typeof message.type !== 'string') return undefined
-  handle(message)
+  const role = senderRole(sender, chrome.runtime)
+  if (!allowedFor(role, message.type)) {
+    sendResponse({ ok: false, error: 'Message refusé.' })
+    return undefined
+  }
+  handle(message, role, sender)
     .then(sendResponse)
     .catch((error) => sendResponse({ ok: false, error: String(error?.message || error) }))
   return true

@@ -3,7 +3,7 @@
   "name": "QVault — Coffre-fort local",
   "short_name": "QVault",
   "description": "Remplissez et enregistrez vos identifiants depuis votre coffre-fort QVault.",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "minimum_chrome_version": "116",
   "icons": {
     "16": "icons/icon-16.png",
@@ -37,6 +37,7 @@
       ],
       "js": [
         "src/content/icons.js",
+        "src/content/guard.js",
         "src/content/autosave.js"
       ],
       "run_at": "document_idle",

@@ -8,6 +8,7 @@ const scriptFiles = [
   'src/background.js',
   'src/content/autosave.js',
   'src/content/icons.js',
+  'src/content/guard.js',
   'src/popup/popup.js',
   'src/shared/crypto.js',
   'src/shared/icons.js',

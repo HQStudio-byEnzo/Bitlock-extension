@@ -33,6 +33,7 @@
   let lastCaptureFingerprint = ''
   let cardHost = null
   let cardRoot = null
+  let cardWatch = null
   let cardMode = null
   let activeAnchor = null
   let hideTimer = null
@@ -228,15 +229,27 @@
     if (cardHost) return
     cardHost = document.createElement('div')
     cardHost.style.cssText = 'all:initial;position:fixed;z-index:2147483647;'
-    cardRoot = cardHost.attachShadow({ mode: 'open' })
+    // Fermé : la page ne peut ni lire la carte ni viser ses boutons.
+    cardRoot = cardHost.attachShadow({ mode: 'closed' })
     const style = document.createElement('style')
     style.textContent = cardStyle()
     cardRoot.append(style)
     document.documentElement.appendChild(cardHost)
+    cardWatch = globalThis.__qvaultGuard?.watch(cardHost) || null
+  }
+
+  /** Action sensible (remplir, enregistrer) : seulement sur un vrai clic, carte bien visible. */
+  function guarded(action) {
+    return (event) => {
+      if (!cardWatch?.accepts(event)) return
+      action(event)
+    }
   }
 
   function closeCard() {
     if (hideTimer) { clearTimeout(hideTimer); hideTimer = null }
+    cardWatch?.stop()
+    cardWatch = null
     cardHost?.remove()
     cardHost = null
     cardRoot = null
@@ -353,7 +366,7 @@
     const rows = items.map(item => element('button', {
       class: 'row', type: 'button',
       'aria-label': `Remplir ${item.label || hostname()}`,
-      onclick: () => fill(item),
+      onclick: guarded(() => fill(item)),
     }, [
       element('span', { class: 'avatar', text: initial(item.label), 'aria-hidden': 'true' }),
       element('span', { class: 'copy' }, [
@@ -376,7 +389,7 @@
     const actions = [
       element('button', {
         class: 'act primary', type: 'button', text: updateId ? 'Mettre à jour' : 'Enregistrer',
-        onclick: () => saveCredential(credential, updateId),
+        onclick: guarded(() => saveCredential(credential, updateId)),
       }),
       element('button', { class: 'act ghost', type: 'button', text: 'Ignorer', onclick: closeCard }),
     ]
