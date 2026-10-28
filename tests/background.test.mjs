@@ -1,6 +1,6 @@
 import test, { after } from 'node:test'
 import assert from 'node:assert/strict'
-import { encryptData, serializeEncryptedPayload, MASTER_VERIFIER_TEXT } from '../src/shared/crypto.js'
+import { encryptData, resolveValue, serializeEncryptedPayload, MASTER_VERIFIER_TEXT } from '../src/shared/crypto.js'
 
 // Faux Chrome : stockage en mémoire et serveur QVault simulé.
 const store = { local: {}, session: {} }
@@ -24,12 +24,31 @@ globalThis.chrome = {
 }
 
 const MASTER = 'mot-de-passe-maitre-de-test'
-async function item(id, url, password) {
+
+/** Enveloppe `n1:<sel>:<iv>:<chiffré>`, comme QVault pour les libellés. */
+async function sealedValue(plaintext) {
+  const enc = await encryptData(plaintext, MASTER)
+  return `n1:${enc.salt}:${enc.iv}:${enc.ciphertext}`
+}
+
+async function item(id, url, password, { encryptedLabel = false, encryptedUrl = false } = {}) {
   const enc = await encryptData(JSON.stringify({ username: 'enzo', password }), MASTER)
-  return { id, label: id, url, payload: serializeEncryptedPayload(enc), iv: enc.iv, is_encrypted: 1 }
+  return {
+    id,
+    label: encryptedLabel ? await sealedValue(id) : id,
+    url: encryptedUrl ? await sealedValue(url) : url,
+    payload: serializeEncryptedPayload(enc),
+    iv: enc.iv,
+    is_encrypted: 1,
+  }
 }
 const verifier = await encryptData(MASTER_VERIFIER_TEXT, MASTER)
-const items = [await item('banque', 'https://banque.example/', 'pw-banque'), await item('blog', 'https://blog.example.org/', 'pw-blog')]
+const items = [
+  await item('banque', 'https://banque.example/', 'pw-banque'),
+  await item('blog', 'https://blog.example.org/', 'pw-blog'),
+  // Ligne telle que QVault l'écrira une fois les libellés chiffrés.
+  await item('mail', 'https://mail.example.net/', 'pw-mail', { encryptedLabel: true, encryptedUrl: true }),
+]
 const posted = []
 globalThis.fetch = async (url, options = {}) => {
   const path = new URL(url).pathname
@@ -52,7 +71,23 @@ const send = (message, sender) => new Promise(resolve => {
 test('le popup déverrouille et liste le coffre', async () => {
   assert.deepEqual(await send({ type: 'QVAULT_UNLOCK', masterPassword: MASTER }, popup), { ok: true })
   const list = await send({ type: 'QVAULT_LIST' }, popup)
-  assert.equal(list.items.length, 2)
+  assert.equal(list.items.length, 3)
+})
+
+test('un libellé et une URL chiffrés sont déchiffrés, jamais affichés en n1:', async () => {
+  const list = await send({ type: 'QVAULT_LIST' }, popup)
+  const mail = list.items.find(entry => entry.id === 'mail')
+  assert.equal(mail.label, 'mail')
+  assert.equal(mail.url, 'https://mail.example.net/')
+  assert.ok(!JSON.stringify(list.items).includes('n1:'), 'aucune enveloppe n1 ne doit atteindre le popup')
+})
+
+test('un élément dont le libellé chiffré est corrompu ne fuit pas d’enveloppe', async () => {
+  const broken = { ...items[2], id: 'casse', label: 'n1:pas:valide:du-tout', url: 'n1:pas:valide:du-tout' }
+  const list = await send({ type: 'QVAULT_LIST' }, popup)
+  assert.ok(!JSON.stringify(list.items).includes('n1:'))
+  assert.equal(await resolveValue(broken.label, MASTER), '')
+  assert.equal(await resolveValue(broken.url, MASTER), '')
 })
 
 test('une page ne peut pas lister tout le coffre', async () => {

@@ -93,6 +93,54 @@ export async function decryptEnvelope(payload, ivBase64, masterPassword) {
   return new TextDecoder().decode(decrypted)
 }
 
+/* --------------------------------------------------- libellés et URL (n1) */
+
+/**
+ * Enveloppe d'un libellé ou d'une URL chiffrés par l'application web :
+ * `n1:<sel base64>:<iv base64>:<chiffré base64>`. Même primitive que le
+ * payload (PBKDF2 600 000, AES-256-GCM), clé dérivée du mot de passe maître.
+ */
+export const ENCRYPTED_VALUE_PREFIX = 'n1'
+
+export function isEncryptedValue(value) {
+  return typeof value === 'string' && value.startsWith(`${ENCRYPTED_VALUE_PREFIX}:`)
+}
+
+export function parseEncryptedValue(value) {
+  const parts = String(value || '').split(':')
+  if (parts.length !== 4 || parts[0] !== ENCRYPTED_VALUE_PREFIX || !parts[1] || !parts[2] || !parts[3]) {
+    throw new Error('Valeur chiffrée invalide.')
+  }
+  return { salt: parts[1], iv: parts[2], ciphertext: parts[3] }
+}
+
+export async function decryptValue(value, masterPassword) {
+  const parts = parseEncryptedValue(value)
+  const key = await deriveKey(masterPassword, base64ToBytes(parts.salt), ['decrypt'])
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: base64ToBytes(parts.iv) },
+    key,
+    base64ToBytes(parts.ciphertext),
+  )
+  return new TextDecoder().decode(decrypted)
+}
+
+/**
+ * Libellé ou URL exploitable : déchiffré si l'enveloppe `n1` est reconnue,
+ * renvoyé tel quel sinon (lignes héritées ou créées par l'extension).
+ * Une enveloppe illisible renvoie une chaîne vide : mieux vaut un élément sans
+ * URL (donc sans remplissage automatique) qu'un repli sur une valeur opaque.
+ */
+export async function resolveValue(value, masterPassword) {
+  if (typeof value !== 'string' || !value) return ''
+  if (!isEncryptedValue(value)) return value
+  try {
+    return await decryptValue(value, masterPassword)
+  } catch {
+    return ''
+  }
+}
+
 export function parseCredentialPayload(plaintext) {
   try {
     const parsed = JSON.parse(plaintext)
