@@ -1,11 +1,12 @@
 {
   "name": "qvault-extension",
-  "version": "2.0.0",
+  "version": "3.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "bun scripts/validate.mjs && node --test tests/*.test.mjs",
-    "validate": "bun scripts/validate.mjs"
+    "validate": "bun scripts/validate.mjs",
+    "package": "bun scripts/package.mjs"
   },
   "devDependencies": {
     "jsdom": "^24.1.3"
