@@ -11,6 +11,7 @@ import {
   decryptEnvelope,
   encryptData,
   parseCredentialPayload,
+  resolveValue,
   serializeEncryptedPayload,
   MASTER_VERIFIER_TEXT,
 } from './shared/crypto.js'
@@ -151,8 +152,10 @@ async function ensureItems() {
       const parsed = parseCredentialPayload(plaintext)
       decrypted.push({
         id: item.id,
-        label: item.label,
-        url: item.url,
+        // Libellés et URL peuvent arriver chiffrés (`n1:...`) depuis QVault :
+        // on les déchiffre avec la même clé que le contenu.
+        label: await resolveValue(item.label, sessionPassword),
+        url: await resolveValue(item.url, sessionPassword),
         favorite: Boolean(item.favorite),
         updatedAt: item.updated_at,
         username: parsed.username,
